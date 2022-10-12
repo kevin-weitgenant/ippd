@@ -12,7 +12,7 @@ void printFrame(char *frame,int x,int y){
         printf("\n");
         for (int j =0; j<y; j++)
             position = *(frame +(i*j + j)) ;
-            cout << position;
+            cout << (int)position;
     }
 }
 
