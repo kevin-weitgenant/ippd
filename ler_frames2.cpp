@@ -1,52 +1,46 @@
-// #include<opencv2/opencv.hpp>
-// using namespace cv;
 #include<iostream>
 using namespace std;
 
+char *frameR, *frameA, *Lixo;
 
+FILE *fr;
 
-void processFrames(int x,int y){
-    FILE *fr, *fw;
-    char frame[x][y];
+void printFrame(char *frame,int x,int y){
+    char position;
 
-    taby1 = (char*) malloc((size_t) (x * y));
-    tabCr = (char*) malloc((size_t) (x/2 * y/2));
-    tabCb = (char*) malloc((size_t) (x/2 * y/2));
+    for (int i =0; i<x; i++){
+        printf("\n");
+        for (int j =0; j<y; j++)
+            position = *(frame +(i*j + j)) ;
+            cout << position;
+    }
+}
 
-    taby2 = (char*) malloc((size_t) (x * y));
+void readFrames(int x,int y){
+    
+    frameR = (char*) malloc((size_t) (x * y));
+    Lixo = (char*) malloc((size_t) (x * y/2));   // 2*(x/2,y/2) =  (x,y/2) 
+    frameA = (char*) malloc((size_t) (x * y));
 
     fr = fopen("akiyo_qcif.yuv", "rb");//Input file
     
-    fw = fopen("frame1.yuv", "wb");
-    fwcb = fopen("framecb.yuv", "wb");
-    fwcr = fopen("framecr.yuv", "wb");
-    fw2 = fopen("frame2.yuv", "wb");
-
-    
-    for(int frame = 1; frame <= 1; frame++){
-        fread(taby1, (size_t) (x), (size_t) (y), fr);
-        fread(tabCr, (size_t) (x/2), (size_t) (y/2), fr);
-        fread(tabCb, (size_t) (x/2), (size_t) (y/2), fr);
-        fread(taby2, (size_t) (x), (size_t) (y), fr);
-        
-
-        fwrite(taby1, (size_t) (x * y), 1, fw);
-        fwrite(tabCr, (size_t) (x * y), 1, fwcb);
-        fwrite(tabCb, (size_t) (x * y), 1, fwcr);
-        fwrite(taby2, (size_t) (x * y), 1, fw2);
+    for(int frame = 1; frame <= 2; frame++){
+        fread(frameR, (size_t) (x), (size_t) (y), fr);
+        fread(Lixo, (size_t) (x), (size_t) (y/2), fr);
+        fread(frameA, (size_t) (x), (size_t) (y), fr);
+        fread(Lixo, (size_t) (x), (size_t) (y/2), fr);
     }
+
+    printf("Primeiro frame:\n\n\n\n");
+    printFrame(frameR, x, y);
+    printf("\n\nSegundo frame:\n\n\n\n");
+    printFrame(frameA, x, y);
 }
 
 int main(int argc, char *argv[]){
     
-    processFrames(176,144);
+    readFrames(176,144);
     //Closing the files
     fclose(fr);
-    fclose(fw);
-    fclose(fwcb);
-    fclose(fwcr);
-    fclose(fw2);
-
-
     return 0;
 }

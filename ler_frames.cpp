@@ -1,18 +1,18 @@
 #include<iostream>
 using namespace std;
 
-char *taby1;
-char *tabLixo, *tabCb;
-char *taby2;
+char *frameR;
+char *Lixo, *tabCb;
+char *frameA;
 
 FILE *fr, *fw, *fwcb,*fwcr,*fw2;
 
 void processFrames(int x,int y){
     
-    taby1 = (char*) malloc((size_t) (x * y));
-    tabLixo = (char*) malloc((size_t) (x * y/2));
+    frameR = (char*) malloc((size_t) (x * y));
+    Lixo = (char*) malloc((size_t) (x * y/2));
 
-    taby2 = (char*) malloc((size_t) (x * y));
+    frameA = (char*) malloc((size_t) (x * y));
 
     fr = fopen("akiyo_qcif.yuv", "rb");//Input file
     
@@ -22,14 +22,14 @@ void processFrames(int x,int y){
 
     
     for(int frame = 1; frame <= 1; frame++){
-        fread(taby1, (size_t) (x), (size_t) (y), fr);
-        fread(tabLixo, (size_t) (x), (size_t) (y/2), fr);
-        fread(taby2, (size_t) (x), (size_t) (y), fr);
+        fread(frameR, (size_t) (x), (size_t) (y), fr);
+        fread(Lixo, (size_t) (x), (size_t) (y/2), fr);
+        fread(frameA, (size_t) (x), (size_t) (y), fr);
         
 
-        fwrite(taby1, (size_t) (x * y), 1, fw);
-        fwrite(tabLixo, (size_t) (x * y/2), 1, fwcb);
-        fwrite(taby2, (size_t) (x * y), 1, fw2);
+        fwrite(frameR, (size_t) (x * y), 1, fw);
+        fwrite(Lixo, (size_t) (x * y/2), 1, fwcb);
+        fwrite(frameA, (size_t) (x * y), 1, fw2);
     }
 }
 
