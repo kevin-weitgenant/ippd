@@ -1,40 +1,47 @@
-// #include<opencv2/opencv.hpp>
-// using namespace cv;
 #include<iostream>
 using namespace std;
 
-char *taby;
-FILE *fr, *fw;
+char *taby1;
+char *tabLixo, *tabCb;
+char *taby2;
 
-// int getNumberOfFrames(video){
-
-//    VideoCapture cap("video.mp4");//Declaring an object to capture stream of frames from default camera//
-//    frame_Number = cap.get(CAP_PROP_FRAME_COUNT);//Getting the total number of frames//
-//    cout << "Total Number of frames are:" << frame_Number << endl;//Showing the number in console window//
-//    system("pause");//Pausing the system to see the result//
-//    cap.release();//Releasing the buffer memory//
-//    return 0;
-// }
-
+FILE *fr, *fw, *fwcb,*fwcr,*fw2;
 
 void processFrames(int x,int y){
     
+    taby1 = (char*) malloc((size_t) (x * y));
+    tabLixo = (char*) malloc((size_t) (x * y/2));
+
+    taby2 = (char*) malloc((size_t) (x * y));
+
+    fr = fopen("akiyo_qcif.yuv", "rb");//Input file
     
-    taby = (char*) malloc((size_t) (x * y));
-    fr = fopen("video_converted_640x360.yuv", "rb");//Input file
-    fw = fopen("teste.yuv", "wb");
+    fw = fopen("frame1.yuv", "wb");
+    fwcb = fopen("framecb.yuv", "wb");
+    fw2 = fopen("frame2.yuv", "wb");
+
     
     for(int frame = 1; frame <= 1; frame++){
-        fread(taby, (size_t) (x / 2), (size_t) (y * 2), fr);
-        fwrite(taby, (size_t) (x * y), 1, fw);
+        fread(taby1, (size_t) (x), (size_t) (y), fr);
+        fread(tabLixo, (size_t) (x), (size_t) (y/2), fr);
+        fread(taby2, (size_t) (x), (size_t) (y), fr);
+        
+
+        fwrite(taby1, (size_t) (x * y), 1, fw);
+        fwrite(tabLixo, (size_t) (x * y/2), 1, fwcb);
+        fwrite(taby2, (size_t) (x * y), 1, fw2);
     }
 }
 
 int main(int argc, char *argv[]){
     
-    processFrames(640,360);
+    processFrames(176,144);
     //Closing the files
     fclose(fr);
     fclose(fw);
+    fclose(fwcb);
+    fclose(fw2);
+
+
     return 0;
 }
