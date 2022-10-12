@@ -10,6 +10,7 @@ char *tabu; //Chroma table U
 char *tabv; //Chroma table V
 FILE *frb, *fwb; //Input and output file
 
+
 void processFrames(){
     printf("\n");
     //Read and write logic
@@ -17,6 +18,8 @@ void processFrames(){
         //Writing data from a file to tables
         
         
+
+
         fread(taby, (size_t) (x / 2), (size_t) (y * 2), frb);
         fread(tabu, (size_t) (x / 4), (size_t) y, frb);
         fread(tabv, (size_t) (x / 4), (size_t) y, frb);
