@@ -27,11 +27,12 @@ char** vectorToMatrix(int width, int height, char *frame){
     }
 
 void printMatrix(int width, int height,char** matrix){
+    
     for (int h = 0; h < height; h++)
       {
             for (int w = 0; w < width; w++)
             {
-                  printf("%d,", (int)matrix[h][w]);
+                  printf("%d,", (unsigned int)matrix[h][w]);
             }
             printf("\n\n\n");
       }
@@ -64,6 +65,26 @@ void readFrames(int x,int y){
 
 
 
+char ** getblock(char ** matrix,int pixelX,int pixelY,int size){
+    int hBlock =0;
+    int wBlock = 0;
+    char** block = 0;
+    block = new char*[size];
+    
+    for (int h = pixelY; h < pixelY+size; h++){
+        block[hBlock] = new char[size];
+        wBlock = 0;
+        for (int w = pixelX; w < pixelX+size; w++){
+            block[hBlock][wBlock]= matrix[h][w];
+            wBlock++;
+        }
+        hBlock++;          
+    }
+
+    return block;
+}
+	
+    
 int main(int argc, char *argv[]){
     
     readFrames(176,144);
