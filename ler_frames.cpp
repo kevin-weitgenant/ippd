@@ -28,10 +28,10 @@ char** vectorToMatrix(int width, int height, char *frame){
 
 void printMatrix(int width, int height,char** matrix){
     
-    for (int h = 0; h < height; h++)
-      {
-            for (int w = 0; w < width; w++)
-            {
+    for (int h = 0; h < height; h++){
+      
+            for (int w = 0; w < width; w++){
+            
                   printf("%d,", (unsigned int)matrix[h][w]);
             }
             printf("\n\n\n");
@@ -84,11 +84,57 @@ char ** getblock(char ** matrix,int pixelX,int pixelY,int size){
     return block;
 }
 	
+int SAD(int width,int height,char** block1,char **block2){
+    int result = 0;
     
+    for (int h = 0; h < height; h++){
+      
+        for (int w = 0; w < width; w++){
+            result += abs(block1[h][w]- block2[h][w]);
+        }
+    }
+    return result;
+} 
+
+
+char** gerarMatrizTeste(int width, int height, char valor){
+    
+    char** matrix = 0;
+    matrix = new char*[height];
+    char i = valor;
+
+    for (int h = 0; h < height; h++){
+        matrix[h] = new char[width];
+        for (int w = 0; w < width; w++){
+                matrix[h][w] = i;
+                i++;
+        }
+    }    
+    return matrix;
+}
+
+
 int main(int argc, char *argv[]){
     
-    readFrames(176,144);
-    fclose(fr);
+    // readFrames(176,144);
+    // fclose(fr);
+    // system("pause");
+    // return 0;
+
+    char** matrizteste = 0;
+    char** matrizteste2 = 0;
+
+    char** bloco = 0;
+
+    printf("\n\nMATRIZ TESTE 1:\n");
+    matrizteste = gerarMatrizTeste(4,3,'a');
+    printMatrix(4,3,matrizteste);
+    matrizteste2 = gerarMatrizTeste(4,3,'b');
+    printf("\n\nMATRIZ TESTE 2:\n");
+    printMatrix(4,3,matrizteste2);
+    printf("SAD = %d",SAD(4,3,matrizteste,matrizteste2));
     system("pause");
-    return 0;
+
 }
+
+
