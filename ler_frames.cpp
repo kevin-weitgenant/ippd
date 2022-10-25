@@ -1,19 +1,40 @@
 #include<iostream>
 using namespace std;
-
+#include <cstdlib>
 char *frameR, *frameA, *Lixo;
 
 FILE *fr;
 
-void printFrame(char *frame,int x,int y){
-    char position;
 
-    for (int i =0; i<x; i++){
-        printf("\n");
-        for (int j =0; j<y; j++)
-            position = *(frame +(i*j + j)) ;
-            cout << (int)position;
+char** vectorToMatrix(int width, int height, char *frame){
+      
+    char** matrix = 0;
+    matrix = new char*[height];
+    int iFrame = 0;
+    
+    for (int h = 0; h < height; h++)
+    {
+        matrix[h] = new char[width];
+        for (int w = 0; w < width; w++)
+        {    
+                matrix[h][w] = frame[iFrame];
+                iFrame++;
+        }
     }
+    free(frame);
+    
+    return matrix;
+    }
+
+void printMatrix(int width, int height,char** matrix){
+    for (int h = 0; h < height; h++)
+      {
+            for (int w = 0; w < width; w++)
+            {
+                  printf("%d,", (int)matrix[h][w]);
+            }
+            printf("\n\n\n");
+      }
 }
 
 void readFrames(int x,int y){
@@ -31,16 +52,22 @@ void readFrames(int x,int y){
         fread(Lixo, (size_t) (x), (size_t) (y/2), fr);
     }
 
-    printf("Primeiro frame:\n\n\n\n");
-    printFrame(frameR, x, y);
-    printf("\n\nSegundo frame:\n\n\n\n");
-    printFrame(frameA, x, y);
+    char** matrixR;
+    char** matrixA;
+    
+    matrixR = vectorToMatrix(176,144,frameR);
+
+    printMatrix(176,144,matrixR);
+    // matrixR = vectorToMatrix(176,144,frameA);
+    // printMatrix(176,144,matrixA); 
 }
+
+
 
 int main(int argc, char *argv[]){
     
     readFrames(176,144);
-    //Closing the files
     fclose(fr);
+    system("pause");
     return 0;
 }
