@@ -1,9 +1,9 @@
 #include<iostream>
 using namespace std;
 #include <cstdlib>
-char *frameR, *frameA, *Lixo;
 
-FILE *fr;
+
+FILE *video;
 
 
 char** vectorToMatrix(int width, int height, char *frame){
@@ -38,29 +38,30 @@ void printMatrix(int width, int height,char** matrix){
       }
 }
 
-void readFrames(int x,int y){
-    
-    frameR = (char*) malloc((size_t) (x * y));
-    Lixo = (char*) malloc((size_t) (x * y/2));   // 2*(x/2,y/2) =  (x,y/2) 
-    frameA = (char*) malloc((size_t) (x * y));
+char * readFrames(int width,int heigth, FILE *video){
+    char *frameY, *Lixo;
 
-    fr = fopen("akiyo_qcif.yuv", "rb");//Input file
-    
-    for(int frame = 1; frame <= 2; frame++){
-        fread(frameR, (size_t) (x), (size_t) (y), fr);
-        fread(Lixo, (size_t) (x), (size_t) (y/2), fr);
-        fread(frameA, (size_t) (x), (size_t) (y), fr);
-        fread(Lixo, (size_t) (x), (size_t) (y/2), fr);
-    }
+    frameY = (char*) malloc((size_t) (width * heigth));
+    Lixo = (char*) malloc((size_t) (width * heigth/2));   // 2*(x/2,y/2) =  (x,y/2) 
 
-    char** matrixR;
-    char** matrixA;
     
-    matrixR = vectorToMatrix(176,144,frameR);
+    fread(frameY, (size_t) (width), (size_t) (heigth), video);
+    fread(Lixo, (size_t) (width), (size_t) (heigth/2), video);
+    
+    
+    //printMatrix(width,heigth, vectorToMatrix(width,heigth,frameY));
+    
+    return frameY;
+}
 
-    printMatrix(176,144,matrixR);
-    // matrixR = vectorToMatrix(176,144,frameA);
-    // printMatrix(176,144,matrixA); 
+
+
+void writeFrame(int width, int height, char *frameY, char *fileName){
+    FILE *fileFrameY = fopen(fileName, "wb");//Input file
+
+    fwrite(frameY, (size_t) (width * height), 1, fileFrameY);
+
+    fclose(fileFrameY);
 }
 
 
@@ -113,27 +114,67 @@ char** gerarMatrizTeste(int width, int height, char valor){
     return matrix;
 }
 
+char **percorreJanela(char **janela, char **blocoAtual){
+    int i = 0;
+    int j = 0;
+    int count = 0;
+
+    //char **recebeMatriz = readFrames(176,144);
+    char **bloco8x8;
+    
+    for ( i = 0; i < 9; i++)
+    {
+        for ( j = 0; j < 9; j++)
+        {
+            printf("\n\nBloco 8x8 do pixel[%d][%d]\n", i , j);
+            bloco8x8 = getblock(janela, i, j, 8);
+            printMatrix(8,8, bloco8x8);
+            
+            //SAD AQUI
+            SAD(8,8,bloco8x8, blocoAtual);
+
+            //SADpos=[[x,y,SAD],[],[],[],[],[]] 
+
+        }
+ 
+    }
+}
+
 
 int main(int argc, char *argv[]){
-    
-    // readFrames(176,144);
-    // fclose(fr);
-    // system("pause");
-    // return 0;
+    char *frameR, *frameA;
+    video = fopen("akiyo_qcif.yuv", "rb");//Input file
 
-    char** matrizteste = 0;
-    char** matrizteste2 = 0;
+    int numeroFrames = 300;
 
-    char** bloco = 0;
+    for (int i = 0; i< numeroFrames-1; i++){
+        frameR = readFrames(176,144,video);
+        frameA = readFrames(176,144,video);
+        
+    //     >>compareFrames(frameR,frameA) >>> 
+    // dividir frame A em blocos 8x8(os blocos não tem sobreposição, usar a função getBlock8x8 dando as posições certas) 
+    // para cada bloco criado, chamar convolution 
 
-    printf("\n\nMATRIZ TESTE 1:\n");
-    matrizteste = gerarMatrizTeste(4,3,'a');
-    printMatrix(4,3,matrizteste);
-    matrizteste2 = gerarMatrizTeste(4,3,'b');
-    printf("\n\nMATRIZ TESTE 2:\n");
-    printMatrix(4,3,matrizteste2);
-    printf("SAD = %d",SAD(4,3,matrizteste,matrizteste2));
+
+    }
+
+    fclose(video);
     system("pause");
+    return 0;
+
+    // char** matrizteste = 0;
+    // char** matrizteste2 = 0;
+
+    // char** bloco = 0;
+
+    // printf("\n\nMATRIZ TESTE 1:\n");
+    // matrizteste = gerarMatrizTeste(4,3,'a');
+    // printMatrix(4,3,matrizteste);
+    // matrizteste2 = gerarMatrizTeste(4,3,'b');
+    // printf("\n\nMATRIZ TESTE 2:\n");
+    // printMatrix(4,3,matrizteste2);
+    // printf("SAD = %d",SAD(4,3,matrizteste,matrizteste2));
+    // system("pause");
 
 }
 
