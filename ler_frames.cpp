@@ -114,26 +114,29 @@ char** gerarMatrizTeste(int width, int height, char valor){
     return matrix;
 }
 
-char **percorreJanela(char **janela, char **blocoAtual){
-    int i = 0;
+
+char **genSearchWindow(char **blocoReferencia,int sizeBlock, int sizeWindow,int pixAtualHeigth, int pixAtualWidth )
+
+
+char **convolution(char **blocoAtual, int sizeBlock, int sizeWindow,int pixAtualHeigth, int pixAtualWidth){  //retorna a posição do bloco dentro da searchWindow que 
+    int i = 0;                                                                              //tem o menor SAD
     int j = 0;
     int count = 0;
 
-    //char **recebeMatriz = readFrames(176,144);
     char **bloco8x8;
     
-    for ( i = 0; i < 9; i++)
+    for ( i = 0; i <= sizeWindow- sizeBlock; i++)
     {
-        for ( j = 0; j < 9; j++)
+        for ( j = 0; j < sizeWindow- sizeBlock; j++)
         {
             printf("\n\nBloco 8x8 do pixel[%d][%d]\n", i , j);
-            bloco8x8 = getblock(janela, i, j, 8);
+            bloco8x8 = getblock(searchWindow, i, j, 8);
             printMatrix(8,8, bloco8x8);
             
             //SAD AQUI
             SAD(8,8,bloco8x8, blocoAtual);
 
-            //SADpos=[[x,y,SAD],[],[],[],[],[]] 
+
 
         }
  
