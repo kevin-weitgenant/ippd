@@ -1,10 +1,22 @@
 #include<iostream>
 using namespace std;
 #include <cstdlib>
-
+#include <vector>
 
 FILE *video;
 
+
+typedef struct 
+{
+    int X;     
+    int Y; 
+} vetor; 
+
+typedef struct 
+{  
+    int SAD;    
+    vetor posicao;
+} blocoCandidato; 
 
 char** vectorToMatrix(int width, int height, char *frame){
       
@@ -115,32 +127,48 @@ char** gerarMatrizTeste(int width, int height, char valor){
 }
 
 
-char **genSearchWindow(char **blocoReferencia,int sizeBlock, int sizeWindow,int pixAtualHeigth, int pixAtualWidth )
 
 
-char **convolution(char **blocoAtual, int sizeBlock, int sizeWindow,int pixAtualHeigth, int pixAtualWidth){  //retorna a posição do bloco dentro da searchWindow que 
-    int i = 0;                                                                              //tem o menor SAD
-    int j = 0;
-    int count = 0;
+vetor convolution(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame,int heightFrame){  
+                                                                            //retorna a posição do bloco dentro do frame(MELHORAR PRA JANELA SE DER TEMPO)
+                                                                            //que tem o menor SAD
+    int h = 0;                                                                              
+    int w = 0;                                                                           
+    int blocoCount = 0;
 
     char **bloco8x8;
-    
-    for ( i = 0; i <= sizeWindow- sizeBlock; i++)
+    vector<blocoCandidato> blocosCandidatos;
+    int count = 0;
+
+    // esses 2 FOR, adicionam no vetor blocosCandidatos, vários blocos armazenando a posição e o seu valor SAD
+    for ( h = 0; h <= heightFrame- sizeBlock; h++)
     {
-        for ( j = 0; j < sizeWindow- sizeBlock; j++)
+        for ( w = 0; w <= widthFrame- sizeBlock; w++)
         {
-            printf("\n\nBloco 8x8 do pixel[%d][%d]\n", i , j);
-            bloco8x8 = getblock(searchWindow, i, j, 8);
+            printf("\n\nBloco 8x8 do pixel[%d][%d]\n", h , w);
+            bloco8x8 = getblock(frameR, w, h, 8);
             printMatrix(8,8, bloco8x8);
             
-            //SAD AQUI
-            SAD(8,8,bloco8x8, blocoAtual);
-
-
-
+            blocosCandidatos.push_back(blocoCandidato());
+            blocosCandidatos[count].posicao.X = w;
+            blocosCandidatos[count].posicao.Y = h;
+            blocosCandidatos[count].SAD = SAD(8,8,bloco8x8, blocoAtual);
         }
- 
     }
+    
+    // percorrer vector e retornar x,y do que tem menor SAD
+    blocoCandidato bestBlock = blocosCandidatos[0];
+    int menorSAD = bestBlock.SAD;
+    int posicaoMelhorBloco = 0;
+    for (int i = 1; i < blocosCandidatos.size(); i++){
+        if (blocosCandidatos[i].SAD < menorSAD){
+            posicaoMelhorBloco = i;
+        }
+    }
+
+    return blocosCandidatos[posicaoMelhorBloco].posicao;
+
+
 }
 
 
