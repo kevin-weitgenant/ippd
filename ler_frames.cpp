@@ -200,7 +200,6 @@ int main(int argc, char *argv[]){
                 printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
             }
         }
-        //retornar para cada frame atual como ele é construído a partir do de referencia
         deleteMatrix(matrizFrameR,widthFrame,heightFrame);
         matrizFrameR = matrizFrameA;   
     }
