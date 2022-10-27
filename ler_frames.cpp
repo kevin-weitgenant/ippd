@@ -135,7 +135,6 @@ vetor convolution(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame
     int h = 0;                                                                              
     int w = 0;                                                                           
     int blocoCount = 0;
-
     char **block;
     vector<blocoCandidato> blocosCandidatos;
     int count = 0;
@@ -153,7 +152,6 @@ vetor convolution(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame
             count++;
         }
     }
-    
     // percorrer vector e retornar x,y do que tem menor SAD
     int menorSAD = blocosCandidatos[0].SAD;
     int posicaoMelhorBloco = 0;
@@ -164,7 +162,6 @@ vetor convolution(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame
         }
     }
     return blocosCandidatos[posicaoMelhorBloco].posicao;
-
 }
 
 
@@ -175,9 +172,8 @@ int main(int argc, char *argv[]){
     int numeroFrames = 300;
 
     for (int i = 0; i< numeroFrames-1; i++){
-        frameR = readFrames(176,144,video);
-        frameA = readFrames(176,144,video);
-    
+        frameR = readFrames(176,144,video);  
+        frameA = readFrames(176,144,video);  
     }
 
     fclose(video);
