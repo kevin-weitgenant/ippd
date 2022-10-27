@@ -8,8 +8,8 @@ FILE *video;
 
 typedef struct 
 {
-    int X;     
-    int Y; 
+    int W;     
+    int H; 
 } vetor; 
 
 typedef struct 
@@ -97,12 +97,12 @@ char ** getblock(char ** matrix,int pixelX,int pixelY,int size){
     return block;
 }
 	
-int SAD(int width,int height,char** block1,char **block2){
+int SAD(int sizeblock,char** block1,char **block2){
     int result = 0;
     
-    for (int h = 0; h < height; h++){
+    for (int h = 0; h < sizeblock; h++){
       
-        for (int w = 0; w < width; w++){
+        for (int w = 0; w < sizeblock; w++){
             result += abs(block1[h][w]- block2[h][w]);
         }
     }
@@ -130,13 +130,13 @@ char** gerarMatrizTeste(int width, int height, char valor){
 
 
 vetor convolution(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame,int heightFrame){  
-                                                                            //retorna a posição do bloco dentro do frame(MELHORAR PRA JANELA SE DER TEMPO)
-                                                                            //que tem o menor SAD
+                                                                        //retorna a posição do bloco dentro do frame(MELHORAR PRA JANELA SE DER TEMPO)
+                                                                        //que tem o menor SAD
     int h = 0;                                                                              
     int w = 0;                                                                           
     int blocoCount = 0;
 
-    char **bloco8x8;
+    char **block;
     vector<blocoCandidato> blocosCandidatos;
     int count = 0;
 
@@ -145,29 +145,25 @@ vetor convolution(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame
     {
         for ( w = 0; w <= widthFrame- sizeBlock; w++)
         {
-            printf("\n\nBloco 8x8 do pixel[%d][%d]\n", h , w);
-            bloco8x8 = getblock(frameR, w, h, 8);
-            printMatrix(8,8, bloco8x8);
-            
+            block = getblock(frameR, w, h, sizeBlock);
             blocosCandidatos.push_back(blocoCandidato());
-            blocosCandidatos[count].posicao.X = w;
-            blocosCandidatos[count].posicao.Y = h;
-            blocosCandidatos[count].SAD = SAD(8,8,bloco8x8, blocoAtual);
+            blocosCandidatos[count].posicao.W = w;
+            blocosCandidatos[count].posicao.H = h;
+            blocosCandidatos[count].SAD = SAD(sizeBlock,block, blocoAtual);
+            count++;
         }
     }
     
     // percorrer vector e retornar x,y do que tem menor SAD
-    blocoCandidato bestBlock = blocosCandidatos[0];
-    int menorSAD = bestBlock.SAD;
+    int menorSAD = blocosCandidatos[0].SAD;
     int posicaoMelhorBloco = 0;
     for (int i = 1; i < blocosCandidatos.size(); i++){
         if (blocosCandidatos[i].SAD < menorSAD){
             posicaoMelhorBloco = i;
+            menorSAD = blocosCandidatos[i].SAD;
         }
     }
-
     return blocosCandidatos[posicaoMelhorBloco].posicao;
-
 
 }
 
@@ -181,31 +177,15 @@ int main(int argc, char *argv[]){
     for (int i = 0; i< numeroFrames-1; i++){
         frameR = readFrames(176,144,video);
         frameA = readFrames(176,144,video);
-        
-    //     >>compareFrames(frameR,frameA) >>> 
-    // dividir frame A em blocos 8x8(os blocos não tem sobreposição, usar a função getBlock8x8 dando as posições certas) 
-    // para cada bloco criado, chamar convolution 
-
-
+    
     }
 
     fclose(video);
     system("pause");
     return 0;
 
-    // char** matrizteste = 0;
-    // char** matrizteste2 = 0;
-
-    // char** bloco = 0;
-
-    // printf("\n\nMATRIZ TESTE 1:\n");
-    // matrizteste = gerarMatrizTeste(4,3,'a');
-    // printMatrix(4,3,matrizteste);
-    // matrizteste2 = gerarMatrizTeste(4,3,'b');
-    // printf("\n\nMATRIZ TESTE 2:\n");
-    // printMatrix(4,3,matrizteste2);
-    // printf("SAD = %d",SAD(4,3,matrizteste,matrizteste2));
-    // system("pause");
+ 
+    system("pause");
 
 }
 
