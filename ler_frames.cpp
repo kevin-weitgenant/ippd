@@ -18,6 +18,7 @@ typedef struct
     vetor posicao;
 } blocoCandidato; 
 
+
 char** vectorToMatrix(int width, int height, char *frame){
       
     char** matrix = 0;
@@ -59,10 +60,7 @@ char * readFrames(int width,int heigth, FILE *video){
     
     fread(frameY, (size_t) (width), (size_t) (heigth), video);
     fread(Lixo, (size_t) (width), (size_t) (heigth/2), video);
-    
-    
-    //printMatrix(width,heigth, vectorToMatrix(width,heigth,frameY));
-    
+      
     return frameY;
 }
 
@@ -75,7 +73,6 @@ void writeFrame(int width, int height, char *frameY, char *fileName){
 
     fclose(fileFrameY);
 }
-
 
 
 char ** getblock(char ** matrix,int pixelX,int pixelY,int size){
@@ -126,10 +123,7 @@ char** gerarMatrizTeste(int width, int height, char valor){
     return matrix;
 }
 
-
-
-
-vetor convolution(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame,int heightFrame){  
+vetor findBestBlock(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame,int heightFrame){  
                                                                         //retorna a posição do bloco dentro do frame(MELHORAR PRA JANELA SE DER TEMPO)
                                                                         //que tem o menor SAD
     int h = 0;                                                                              
@@ -152,6 +146,7 @@ vetor convolution(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame
             count++;
         }
     }
+
     // percorrer vector e retornar x,y do que tem menor SAD
     int menorSAD = blocosCandidatos[0].SAD;
     int posicaoMelhorBloco = 0;
@@ -163,25 +158,42 @@ vetor convolution(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame
     }
     return blocosCandidatos[posicaoMelhorBloco].posicao;
 }
-
-
 int main(int argc, char *argv[]){
-    char *frameR, *frameA;
-    video = fopen("akiyo_qcif.yuv", "rb");//Input file
-
+    
     int numeroFrames = 300;
+    int heightFrame = 144;
+    int widthFrame = 176;
+    int sizeBlock = 8;
+    char **block;
+    char **matrizFrameA, **matrizFrameR;
+    char *frameR, *frameA;
 
-    for (int i = 0; i< numeroFrames-1; i++){
-        frameR = readFrames(176,144,video);  
-        frameA = readFrames(176,144,video);  
+    
+    video = fopen("akiyo_qcif.yuv", "rb");//Input file
+    frameR = readFrames(widthFrame,heightFrame,video); 
+
+
+    for (int iFrame = 0; iFrame< numeroFrames-1; iFrame++){      //percorrer todos os frames   
+        frameA = readFrames(widthFrame,heightFrame,video);
+        int count = 0;
+        printf("\n\n FRAME %dn\n",iFrame+1);
+        for ( int h = 0; h <= heightFrame- sizeBlock; h+=sizeBlock){//dividir frame A em blocos sem superposição
+            for ( int w = 0; w <= widthFrame- sizeBlock; w+=sizeBlock){         
+                matrizFrameA = vectorToMatrix(widthFrame,heightFrame,frameA);
+                block = getblock(matrizFrameA, w, h, sizeBlock); //pega um bloco sem sobreposição em A
+                matrizFrameR = vectorToMatrix(widthFrame,heightFrame,frameR);
+
+                vetor Rv = findBestBlock(block, matrizFrameR,sizeBlock,widthFrame, heightFrame); //retorna o vetor do melhor bloco no frame de referencia
+                printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
+            }
+        }
+        //retornar para cada frame atual como ele é construído a partir do de referencia
+        frameR = frameA;
     }
 
     fclose(video);
     system("pause");
     return 0;
-
- 
-    system("pause");
 
 }
 
