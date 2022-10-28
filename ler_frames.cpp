@@ -2,6 +2,7 @@
 using namespace std;
 #include <cstdlib>
 #include <vector>
+#include <time.h>
 
 FILE *video;
 
@@ -170,7 +171,8 @@ vetor findBestBlock(char **blocoAtual, char **frameR,int sizeBlock, int widthFra
 }
 
 int main(int argc, char *argv[]){
-    
+    time_t begin = time(NULL);
+
     int numeroFrames = 300;
     int heightFrame = 144;
     int widthFrame = 176;
@@ -207,6 +209,8 @@ int main(int argc, char *argv[]){
     
 
     fclose(video);
+    time_t end = time(NULL);
+    printf("The elapsed time is %d seconds", (end - begin));
     system("pause");
     return 0;
 
