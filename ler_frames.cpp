@@ -173,9 +173,9 @@ vetor findBestBlock(char **blocoAtual, char **frameR,int sizeBlock, int widthFra
 int main(int argc, char *argv[]){
     time_t begin = time(NULL);
 
-    int numeroFrames = 300;
-    int heightFrame = 144;
-    int widthFrame = 176;
+    int numeroFrames = 120;
+    int heightFrame = 360;
+    int widthFrame = 640;
     int sizeBlock = 8;
     char **block;
     char **matrizFrameA, **matrizFrameR;
@@ -199,7 +199,9 @@ int main(int argc, char *argv[]){
 
                 vetor Rv = findBestBlock(block, matrizFrameR,sizeBlock,widthFrame, heightFrame); //retorna o vetor do melhor bloco no frame de referencia
                 deleteMatrix(block,sizeBlock,sizeBlock);
-                printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
+                if (Rv.W != w || Rv.H != h){
+                    printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
+                }
             }
         }
         deleteMatrix(matrizFrameR,widthFrame,heightFrame);
