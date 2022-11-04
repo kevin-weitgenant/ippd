@@ -4,9 +4,6 @@ using namespace std;
 #include <vector>
 #include <time.h>
 
-FILE *video;
-
-
 typedef struct 
 {
     int W;     
@@ -19,37 +16,14 @@ typedef struct
     vetor posicao;
 } blocoCandidato; 
 
+FILE *video;
+int numeroFrames = 120;
+int heightFrame = 360;
+int widthFrame = 640;
+int sizeBlock = 8;
 
-char** vectorToMatrix(int width, int height, char *frame){
-      
-    char** matrix = 0;
-    matrix = new char*[height];
-    int iFrame = 0;
-    
-    for (int h = 0; h < height; h++)
-    {
-        matrix[h] = new char[width];
-        for (int w = 0; w < width; w++)
-        {    
-                matrix[h][w] = frame[iFrame];
-                iFrame++;
-        }
-    }
-    free(frame);
-    
-    return matrix;
-    }
-
-void printMatrix(int width, int height,char** matrix){
-    
-    for (int h = 0; h < height; h++){
-      
-            for (int w = 0; w < width; w++){
-            
-                  printf("%d,", (unsigned int)matrix[h][w]);
-            }
-            printf("\n\n\n");
-      }
+char acessFrameArrayAsMatrix(char *vetor, int h, int w){
+    return vetor[widthFrame*h + w];
 }
 
 void deleteMatrix(char **matrix,int width,int heigth){
@@ -61,6 +35,8 @@ void deleteMatrix(char **matrix,int width,int heigth){
     delete[] matrix;
 }
 
+
+
 char * readFrames(int width,int heigth, FILE *video){
     char *frameY, *Lixo;
 
@@ -70,12 +46,13 @@ char * readFrames(int width,int heigth, FILE *video){
     
     fread(frameY, (size_t) (width), (size_t) (heigth), video);
     fread(Lixo, (size_t) (width), (size_t) (heigth/2), video);
+    free(Lixo);
       
     return frameY;
 }
 
 
-
+// colocar em um módulo separado
 void writeFrame(int width, int height, char *frameY, char *fileName){
     FILE *fileFrameY = fopen(fileName, "wb");//Input file
 
@@ -85,7 +62,7 @@ void writeFrame(int width, int height, char *frameY, char *fileName){
 }
 
 
-char ** getblock(char ** matrix,int pixelX,int pixelY,int size){
+char ** getblock(char * frame,int pixelX,int pixelY,int size){
     int hBlock =0;
     int wBlock = 0;
     char** block = 0;
@@ -95,7 +72,7 @@ char ** getblock(char ** matrix,int pixelX,int pixelY,int size){
         block[hBlock] = new char[size];
         wBlock = 0;
         for (int w = pixelX; w < pixelX+size; w++){
-            block[hBlock][wBlock]= matrix[h][w];
+            block[hBlock][wBlock]= acessFrameArrayAsMatrix(frame,pixelY,pixelX);   
             wBlock++;
         }
         hBlock++;          
@@ -117,23 +94,7 @@ int SAD(int sizeblock,char** block1,char **block2){
 } 
 
 
-char** gerarMatrizTeste(int width, int height, char valor){
-    
-    char** matrix = 0;
-    matrix = new char*[height];
-    char i = valor;
-
-    for (int h = 0; h < height; h++){
-        matrix[h] = new char[width];
-        for (int w = 0; w < width; w++){
-                matrix[h][w] = i;
-                i++;
-        }
-    }    
-    return matrix;
-}
-
-vetor findBestBlock(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame,int heightFrame){  
+vetor findBestBlock(char **blocoAtual, char *frameR,int sizeBlock, int widthFrame,int heightFrame){  
                                                                         //retorna a posição do bloco dentro do frame(MELHORAR PRA JANELA SE DER TEMPO)
                                                                         //que tem o menor SAD
     int h = 0;                                                                              
@@ -162,9 +123,12 @@ vetor findBestBlock(char **blocoAtual, char **frameR,int sizeBlock, int widthFra
     int menorSAD = blocosCandidatos[0].SAD;
     int posicaoMelhorBloco = 0;
     for (int i = 1; i < blocosCandidatos.size(); i++){
-        if (blocosCandidatos[i].SAD < menorSAD){
+        if (blocosCandidatos[i].SAD < menorSAD || menorSAD != 0){
             posicaoMelhorBloco = i;
             menorSAD = blocosCandidatos[i].SAD;
+        }
+        else{
+            break;
         }
     }
     return blocosCandidatos[posicaoMelhorBloco].posicao;
@@ -172,42 +136,39 @@ vetor findBestBlock(char **blocoAtual, char **frameR,int sizeBlock, int widthFra
 
 int main(int argc, char *argv[]){
     time_t begin = time(NULL);
-
-    int numeroFrames = 120;
-    int heightFrame = 360;
-    int widthFrame = 640;
-    int sizeBlock = 8;
     char **block;
-    char **matrizFrameA, **matrizFrameR;
     char *frameR, *frameA;
 
     
-    video = fopen("akiyo_qcif.yuv", "rb");//Input file
+    video = fopen("video_converted_640x360.yuv", "rb");//Input file
     frameR = readFrames(widthFrame,heightFrame,video); 
-    matrizFrameR = vectorToMatrix(widthFrame,heightFrame,frameR);
 
+    
     for (int iFrame = 0; iFrame< numeroFrames-1; iFrame++){      //percorrer todos os frames   
+        time_t beginFrame = time(NULL);
         frameA = readFrames(widthFrame,heightFrame,video);
-        matrizFrameA = vectorToMatrix(widthFrame,heightFrame,frameA);
         int count = 0;
         printf("\n\n FRAME %dn\n",iFrame+1);
         for ( int h = 0; h <= heightFrame- sizeBlock; h+=sizeBlock){//dividir frame A em blocos sem superposição
             for ( int w = 0; w <= widthFrame- sizeBlock; w+=sizeBlock){         
                 
-                block = getblock(matrizFrameA, w, h, sizeBlock); //pega um bloco sem sobreposição em A
+                block = getblock(frameA, w, h, sizeBlock); //pega um bloco sem sobreposição em A
                 
 
-                vetor Rv = findBestBlock(block, matrizFrameR,sizeBlock,widthFrame, heightFrame); //retorna o vetor do melhor bloco no frame de referencia
+                vetor Rv = findBestBlock(block, frameR,sizeBlock,widthFrame, heightFrame); //retorna o vetor do melhor bloco no frame de referencia
                 deleteMatrix(block,sizeBlock,sizeBlock);
-                if (Rv.W != w || Rv.H != h){
-                    printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
-                }
+               
+                printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
+                
             }
         }
-        deleteMatrix(matrizFrameR,widthFrame,heightFrame);
-        matrizFrameR = matrizFrameA;   
+        time_t endFrame = time(NULL);
+        printf("\n\nTEMPO PROCESSANDO 1 FRAME %d seconds\n\n", (endFrame - beginFrame));
+        free(frameR);
+        frameR = frameA;
+         
     }
-    deleteMatrix(matrizFrameR,widthFrame,heightFrame);
+    free(frameR);
     
 
     fclose(video);
