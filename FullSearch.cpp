@@ -116,23 +116,6 @@ int SAD(int sizeblock,char** block1,char **block2){
     return result;
 } 
 
-
-char** gerarMatrizTeste(int width, int height, char valor){
-    
-    char** matrix = 0;
-    matrix = new char*[height];
-    char i = valor;
-
-    for (int h = 0; h < height; h++){
-        matrix[h] = new char[width];
-        for (int w = 0; w < width; w++){
-                matrix[h][w] = i;
-                i++;
-        }
-    }    
-    return matrix;
-}
-
 vetor findBestBlock(char **blocoAtual, char **frameR,int sizeBlock, int widthFrame,int heightFrame){  
                                                                         //retorna a posição do bloco dentro do frame(MELHORAR PRA JANELA SE DER TEMPO)
                                                                         //que tem o menor SAD
