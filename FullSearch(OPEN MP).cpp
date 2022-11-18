@@ -3,6 +3,7 @@ using namespace std;
 #include <cstdlib>
 #include <vector>
 #include <time.h>
+#include <omp.h>
 
 FILE *video;
 
