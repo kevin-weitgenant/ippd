@@ -185,10 +185,11 @@ int main(int argc, char *argv[]){
           
           printf("Enviado requisição de frameB %d", rank_destino);
           
-          //frameR = readFrames(widthFrame,heightFrame,video);
+          
           MPI_Send(&frameR, char_por_frame, MPI_CHAR, rank_destino, 1, MPI_COMM_WORLD); // em ordem com esse
           
           frameR = frameA; //agora o proximo ref é o atual
+
         }
       }
       

@@ -81,10 +81,9 @@ char ** getblock(char * frame,int pixelX,int pixelY,int size){
 }
 	
 int SAD(int sizeblock,char** block1,char **block2){
-    int result = 0;
-    
-    for (int h = 0; h < sizeblock; h++){
-      
+    int result =0;
+
+    for (int h = 0; h < sizeblock; h++){    
         for (int w = 0; w < sizeblock; w++){
             result += abs(block1[h][w]- block2[h][w]);
         }
@@ -103,9 +102,9 @@ vetor findBestBlock(char **blocoAtual, char *frameR,int sizeBlock, int widthFram
     int count = 0;
 
     // esses 2 FOR, adicionam no vetor blocosCandidatos, vários blocos armazenando a posição e o seu valor SAD
-    for ( h = 0; h <= heightFrame- sizeBlock; h++)
+    for ( h = 0; h <= heightFrame- sizeBlock; h+= 1)
     {
-        for ( w = 0; w <= widthFrame- sizeBlock; w++)
+        for ( w = 0; w <= widthFrame- sizeBlock; w+=1)
         {
             block = getblock(frameR, w, h, sizeBlock);
             blocosCandidatos.push_back(blocoCandidato());
@@ -120,6 +119,7 @@ vetor findBestBlock(char **blocoAtual, char *frameR,int sizeBlock, int widthFram
     // percorrer vector e retornar x,y do que tem menor SAD
     int menorSAD = blocosCandidatos[0].SAD;
     int posicaoMelhorBloco = 0;
+
     for (int i = 1; i < blocosCandidatos.size(); i++){
         if (blocosCandidatos[i].SAD < menorSAD){
             posicaoMelhorBloco = i;
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]){
         frameA = readFrames(widthFrame,heightFrame,video);
         int count = 0;
         printf("\n\n FRAME %dn\n",iFrame+1);
-        #pragma omp parallel for
+        #pragma omp parallel for collapse(2)
         for ( int h = 0; h <= heightFrame- sizeBlock; h+=sizeBlock){//dividir frame A em blocos sem superposição  
             for ( int w = 0; w <= widthFrame- sizeBlock; w+=sizeBlock){         
                 char **block;
@@ -156,7 +156,7 @@ int main(int argc, char *argv[]){
 
                 vetor Rv = findBestBlock(block, frameR,sizeBlock,widthFrame, heightFrame); //retorna o vetor do melhor bloco no frame de referencia
                 deleteMatrix(block,sizeBlock,sizeBlock);
-                printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
+                //printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
                 
             }
         }
@@ -175,3 +175,5 @@ int main(int argc, char *argv[]){
     return 0;
 
 }
+
+// g++ -fopenmp FullSearch_OPENMP.cpp -lpthread -o teste
