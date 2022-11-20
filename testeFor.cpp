@@ -143,21 +143,26 @@ int main(int argc, char *argv[]){
     for (int iFrame = 0; iFrame< numeroFrames-1; iFrame++){      //percorrer todos os frames   
         time_t beginFrame = time(NULL);
         frameA = readFrames(widthFrame,heightFrame,video);
-        int count = 0;
+        
         printf("\n\n FRAME %dn\n",iFrame+1);
         #pragma omp parallel for
+        int count = 0;
         for ( int h = 0; h <= heightFrame- sizeBlock; h+=sizeBlock){//dividir frame A em blocos sem superposição  
+            int count2 = 0;
+            int teste2 = 
             for ( int w = 0; w <= widthFrame- sizeBlock; w+=sizeBlock){         
                 char **block;
                 block = getblock(frameA, w, h, sizeBlock); //pega um bloco sem sobreposição em A
                 
-
+                count++;
                 vetor Rv = findBestBlock(block, frameR,sizeBlock,widthFrame, heightFrame); //retorna o vetor do melhor bloco no frame de referencia
                 deleteMatrix(block,sizeBlock,sizeBlock);
                 printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
                 
             }
         }
+        int num_exec_for_for = ((widthFrame - sizeBlock) / sizeBlock) * ((heightFrame - sizeBlock) / sizeBlock);
+        printf("\n\n\ncount = %dnum_for = %d\n\n\n",count,num_exec_for_for);
   
         frameR = frameA;  
         time_t endFrame = time(NULL);
@@ -173,11 +178,3 @@ int main(int argc, char *argv[]){
     return 0;
 
 }
-
-
-
-    
-
-// g++ -fopenmp FullSearch_OPENMP.cpp -lpthread -o teste
-
-// g++ FullSearch_OPENMP.cpp -o teste
