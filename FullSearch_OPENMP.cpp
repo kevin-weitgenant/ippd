@@ -145,7 +145,7 @@ int main(int argc, char *argv[]){
         frameA = readFrames(widthFrame,heightFrame,video);
         int count = 0;
         printf("\n\n FRAME %dn\n",iFrame+1);
-        #pragma omp parallel for
+        #pragma omp parallel for collapse(2)
         for ( int h = 0; h <= heightFrame- sizeBlock; h+=sizeBlock){//dividir frame A em blocos sem superposição  
             for ( int w = 0; w <= widthFrame- sizeBlock; w+=sizeBlock){         
                 char **block;
