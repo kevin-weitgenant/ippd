@@ -194,7 +194,6 @@ int main(int argc, char *argv[]){
       }
       
       //for recebimento
-      //#pragma for
       for (int iFrame = 0; iFrame< numeroFrames-1; iFrame += qtd_ranks - 1){
       	for(int rank_remetente = 1; rank_remetente < qtd_ranks; rank_remetente++){  // cada escravo envia uma resposta
           MPI_Recv(vetorResultado, 4*num_exec_for_for, MPI_INT, rank_remetente, MPI_ANY_TAG, MPI_COMM_WORLD, &st);
@@ -246,12 +245,11 @@ int main(int argc, char *argv[]){
         free(frameA);
     }
      
-		if (rank == 0){ 
+	if (rank == 0){ 
       fclose(video);
       time_t end = time(NULL);
       printf("The elapsed time is %ld seconds", (end - begin));
-      system("pause");
-      
+      system("pause");   
     }
       
   MPI_Finalize();
