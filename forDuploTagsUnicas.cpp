@@ -146,11 +146,11 @@ int main(int argc, char *argv[]) {
   // start MPI
 
   char *frameR, *frameA;
-  time_t begin; // coloquei aqui senao ele nao encontra lá no ultimo if
+  time_t begin = time(NULL);
 
   if (rank == 0) {
-    int* vetorResultado = new int[4*num_exec_for_for+1];
-    time_t begin = time(NULL);
+    
+    
     video = fopen("video_converted_640x360.yuv", "rb");
     frameR = readFrames(widthFrame, heightFrame, video);
 
@@ -159,9 +159,9 @@ int main(int argc, char *argv[]) {
         frameA = readFrames(widthFrame, heightFrame, video);
 
         // MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
-        MPI_Send(frameR, char_por_frame, MPI_CHAR, rank_destino, iFrame, MPI_COMM_WORLD);
+        MPI_Send(frameR, char_por_frame, MPI_CHAR, rank_destino, 0, MPI_COMM_WORLD);
         printf("Enviado requisição de frameR %d", rank_destino);
-        MPI_Send(frameA, char_por_frame, MPI_CHAR, rank_destino, iFrame+1, MPI_COMM_WORLD);
+        MPI_Send(frameA, char_por_frame, MPI_CHAR, rank_destino, 1, MPI_COMM_WORLD);
         printf("Enviado requisição de frameA %d", rank_destino);
         delete (frameR);
         frameR = frameA;
@@ -172,14 +172,13 @@ int main(int argc, char *argv[]) {
    
     //for recebimento
     
-    for (int iFrame = 0; iFrame< numeroFrames-1; iFrame += qtd_ranks - 1){
-      	for(int rank_remetente = 1; rank_remetente < qtd_ranks; rank_remetente++){  // cada escravo envia uma resposta
-         
-          MPI_Recv(vetorResultado, 3601, MPI_INT, rank_remetente, 100, MPI_COMM_WORLD, &st);     
-          printf("recebido %d\n", vetorResultado[0]);
+    for (int iFrame = 0; iFrame< numeroFrames-1; iFrame +=qtd_ranks - 1){     
+        for(int rank_remetente = 1; rank_remetente < qtd_ranks; rank_remetente++){
+          int* vetorResultado = new int[4*num_exec_for_for+1];
+          MPI_Recv(vetorResultado, 100, MPI_INT, rank, 100, MPI_COMM_WORLD, &st);     
+          delete(vetorResultado);
         }
-      }
-      delete(vetorResultado);
+    }
   }
 
   else {
@@ -189,9 +188,9 @@ int main(int argc, char *argv[]) {
       frameA = new char[char_por_frame];
 
       // int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
-      MPI_Recv(frameR, char_por_frame, MPI_CHAR, 0, iFrame, MPI_COMM_WORLD, &st);
+      MPI_Recv(frameR, char_por_frame, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &st);
       printf("recebido frame R");
-      MPI_Recv(frameA, char_por_frame, MPI_CHAR, 0, iFrame+1, MPI_COMM_WORLD, &st);
+      MPI_Recv(frameA, char_por_frame, MPI_CHAR, 0, 1, MPI_COMM_WORLD, &st);
       printf("recebido frame A");
 
       int count = 0;
@@ -209,17 +208,14 @@ int main(int argc, char *argv[]) {
           vetorResultado[++count] = w;			//1 5 9
           vetorResultado[++count] = Rv.H;	//2 6 10
           vetorResultado[++count] = Rv.W;	//3 7 11 
+          printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
            
         }
       } 
-      MPI_Send(vetorResultado, 3601, MPI_INT, 0, 100, MPI_COMM_WORLD);
-      delete (vetorResultado);
+      MPI_Send(vetorResultado, 100, MPI_INT, 0, 100,MPI_COMM_WORLD);
       delete (frameR);
       delete (frameA);
-      
-      
-      
-
+      delete (vetorResultado);
     }
   }
   
@@ -233,5 +229,5 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
-// mpic++ openMP_MAISframes.cpp -o teste
+// mpic++ forDuploTagsUnicas.cpp -o teste
 // mpirun --host localhost:4 teste
