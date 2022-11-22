@@ -4,6 +4,7 @@ using namespace std;
 #include <cstdlib>
 #include <time.h>
 #include <vector>
+#include <fstream>
 
 typedef struct 
 {
@@ -17,7 +18,7 @@ typedef struct
     vetor posicao;
 } blocoCandidato; 
 
-int const numeroFrames = 118;
+int const numeroFrames = 4;
 int const heightFrame = 360;
 int const widthFrame = 640;
 int sizeBlock = 8;
@@ -157,6 +158,9 @@ int main(int argc, char *argv[]) {
     video = fopen("video_converted_640x360.yuv", "rb");
     frameR = readFrames(widthFrame, heightFrame, video);
    
+    
+    ofstream file;
+    file.open("vetoresPosicao.txt");
     for (int iFrame = 0; iFrame < numeroFrames-1; iFrame +=1) {     
       frameA = readFrames(widthFrame, heightFrame, video);
       // MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
@@ -168,16 +172,26 @@ int main(int argc, char *argv[]) {
       frameR = frameA;
 
       //recebimento
-      int* vetorResultado = new int[3600*4];
+      int size;
+      vector<int> vetRecebimento;
+
       printf("Vou receber: %d\n",iFrame%(qtd_ranks-1)+1);
       //(void *buf, int count, MPI_Datatype datatype, int source,int tag, MPI_Comm comm, MPI_Request * request)
-      MPI_Recv(vetorResultado, 3600*4, MPI_INT, MPI_ANY_SOURCE, 100, MPI_COMM_WORLD, &st);     
+      
+      MPI_Probe(MPI_ANY_SOURCE, 100, MPI_COMM_WORLD, &st);
+      MPI_Get_count(&st , MPI_INT , &size );
+      vetRecebimento.resize(size);
+      MPI_Recv(vetRecebimento.data(), vetRecebimento.size(), MPI_INT, MPI_ANY_SOURCE, 100, MPI_COMM_WORLD, &st);     
       printf("Recebido: %d\n",iFrame%(qtd_ranks-1)+1);
-      delete(vetorResultado);
+      file<<"frame "<<iFrame+1<<'\n';
+      for(vector<int>::const_iterator i = vetRecebimento.begin(); i != vetRecebimento.end(); ++i) {
+        file << *i;
+      }
+      file<<'\n';
 
     }
     delete (frameR);
-
+    file.close();
   }
 
   else {
@@ -197,7 +211,7 @@ int main(int argc, char *argv[]) {
       printf("recebido frame A numero %d rank %d)\n",(iFrame*(qtd_ranks-1))+rank, rank);
       
       int count = 0;
-      int* vetorResultado = new int[3600*4];
+      vector<int> vetRecebimento;
       #pragma omp parallel for collapse(2)
       for (int h = 0; h <= heightFrame - sizeBlock; h += sizeBlock) { // dividir frame A em blocos sem superposição
         for (int w = 0; w <= widthFrame - sizeBlock; w += sizeBlock) {
@@ -207,30 +221,29 @@ int main(int argc, char *argv[]) {
           deleteMatrix(block, sizeBlock, sizeBlock);
 
 
-          vetorResultado[++count] = h;				//0 4 8     //   3600*(Frame A(h,w)   FrameR (rv.H,rv.W)  )   
-          vetorResultado[++count] = w;			//1 5 9
-          vetorResultado[++count] = Rv.H;	//2 6 10
-          vetorResultado[++count] = Rv.W;	//3 7 11 
+          vetRecebimento.push_back(h);				//0 4 8     //   3600*(Frame A(h,w)   FrameR (rv.H,rv.W)  )   
+          vetRecebimento.push_back(w);		//1 5 9
+          vetRecebimento.push_back(Rv.H);	//2 6 10
+          vetRecebimento.push_back(Rv.W);	//3 7 11 
           //printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
            
         }
       } 
       printf("Vou enviar: %d\n",rank);
-      MPI_Send(vetorResultado, 3600*4, MPI_INT, 0, 100, MPI_COMM_WORLD);
+      MPI_Send(vetRecebimento.data(), vetRecebimento.size(), MPI_INT, 0, 100, MPI_COMM_WORLD);
       printf("Enviou: %d\n",rank);
       delete (frameR);
-      delete (frameA);
-      delete (vetorResultado);   
+      delete (frameA);  
     }
-    std::cout << "I node " << nMyRank << " have finish!\n";
+    std::cout << "Processador" << nMyRank << " finalizou\n";
   }
   
-  std::cout << "I node " << nMyRank << " am waiting for other nodes to finish...\n";
+  std::cout << "Processador" << nMyRank << " Esperando pela finalização dos outros...\n";
   MPI::COMM_WORLD.Barrier();
   if (rank == 0){ 
       fclose(video);
       time_t end = time(NULL);
-      printf("The elapsed time is %ld seconds\n", (end - begin)); 
+      printf("Tempo de execução foi de %ld segundos\n", (end - begin)); 
     }
   
   
