@@ -160,14 +160,14 @@ int main(int argc, char *argv[]) {
    
     
     ofstream file;
-    file.open("vetoresPosicao.txt");
+    file.open("vetoresPosicao2.txt");
     for (int iFrame = 0; iFrame < numeroFrames-1; iFrame +=1) {     
       frameA = readFrames(widthFrame, heightFrame, video);
       // MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
       MPI_Send(frameR, char_por_frame, MPI_CHAR, iFrame%(qtd_ranks-1)+1, 0, MPI_COMM_WORLD);
-      printf("Enviado requisição de frameR numero%d rank %d)\n", iFrame+1,iFrame%(qtd_ranks-1)+1);
+      printf("Enviado frameR numero%d rank %d)\n", iFrame+1,iFrame%(qtd_ranks-1)+1);
       MPI_Send(frameA, char_por_frame, MPI_CHAR, iFrame%(qtd_ranks-1)+1, 1, MPI_COMM_WORLD);
-      printf("Enviado requisição de frameA numero %d rank %d)\n", iFrame+1,iFrame%(qtd_ranks-1)+1);
+      printf("Enviado frameA numero %d rank %d)\n", iFrame+1,iFrame%(qtd_ranks-1)+1);
       delete (frameR);
       frameR = frameA;
 
@@ -175,14 +175,14 @@ int main(int argc, char *argv[]) {
       int size;
       vector<int> vetRecebimento;
 
-      printf("Vou receber: %d\n",iFrame%(qtd_ranks-1)+1);
+      printf("Vou receber do rank: %d\n",iFrame%(qtd_ranks-1)+1);
       //(void *buf, int count, MPI_Datatype datatype, int source,int tag, MPI_Comm comm, MPI_Request * request)
       
       MPI_Probe(MPI_ANY_SOURCE, 100, MPI_COMM_WORLD, &st);
       MPI_Get_count(&st , MPI_INT , &size );
       vetRecebimento.resize(size);
       MPI_Recv(vetRecebimento.data(), vetRecebimento.size(), MPI_INT, MPI_ANY_SOURCE, 100, MPI_COMM_WORLD, &st);     
-      printf("Recebido: %d\n",iFrame%(qtd_ranks-1)+1);
+      printf("Recebido do rank: %d\n",iFrame%(qtd_ranks-1)+1);
       file<<"frame "<<iFrame+1<<'\n';
       for(vector<int>::const_iterator i = vetRecebimento.begin(); i != vetRecebimento.end(); ++i) {
         file << *i;
