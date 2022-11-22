@@ -1,12 +1,9 @@
-#include<iostream>
+#include <iostream>
 using namespace std;
+#include "mpi.h"
 #include <cstdlib>
-#include <vector>
 #include <time.h>
-#include <omp.h>
-
-FILE *video;
-
+#include <vector>
 
 typedef struct 
 {
@@ -20,11 +17,18 @@ typedef struct
     vetor posicao;
 } blocoCandidato; 
 
-int const numeroFrames = 120;
+int const numeroFrames = 118;
 int const heightFrame = 360;
 int const widthFrame = 640;
-int const sizeBlock = 8;
+int sizeBlock = 8;
+FILE *video;
 
+//para logica MPI
+int const char_por_frame = heightFrame * widthFrame;
+//int num_exec_for_for = ((widthFrame - sizeBlock) / sizeBlock) * ((heightFrame - sizeBlock) / sizeBlock);
+int num_exec_for_for = 3600;
+
+//para logica MPI
 
 char acessFrameArrayAsMatrix(char *vetor, int h, int w){
     return vetor[widthFrame*h + w];
@@ -34,7 +38,7 @@ void deleteMatrix(char **matrix,int width,int heigth){
 
     for( int h = 0 ; h < heigth ; h++ )
     {
-        delete[] matrix[h]; // delete array within matrix
+        delete[] matrix[h]; 
     }
     delete[] matrix;
 }
@@ -102,9 +106,9 @@ vetor findBestBlock(char **blocoAtual, char *frameR,int sizeBlock, int widthFram
     int count = 0;
 
     // esses 2 FOR, adicionam no vetor blocosCandidatos, vários blocos armazenando a posição e o seu valor SAD
-    for ( h = 0; h <= heightFrame- sizeBlock; h+= 1)
+    for ( h = 0; h <= heightFrame- sizeBlock; h+=sizeBlock)
     {
-        for ( w = 0; w <= widthFrame- sizeBlock; w+=1)
+        for ( w = 0; w <= widthFrame- sizeBlock; w+=sizeBlock)
         {
             block = getblock(frameR, w, h, sizeBlock);
             blocosCandidatos.push_back(blocoCandidato());
@@ -129,51 +133,115 @@ vetor findBestBlock(char **blocoAtual, char *frameR,int sizeBlock, int widthFram
     return blocosCandidatos[posicaoMelhorBloco].posicao;
 }
 
-int main(int argc, char *argv[]){
-    time_t begin = time(NULL);
+int main(int argc, char *argv[]) {
 
-    
-    
-    
-    char *frameR, *frameA;
-
-    
-    video = fopen("video_converted_640x360.yuv", "rb");//Input file
-    frameR = readFrames(widthFrame,heightFrame,video); 
-    
-
-    for (int iFrame = 0; iFrame< numeroFrames-1; iFrame++){      //percorrer todos os frames   
-        time_t beginFrame = time(NULL);
-        frameA = readFrames(widthFrame,heightFrame,video);
-        int count = 0;
-        printf("\n\n FRAME %dn\n",iFrame+1);
-        #pragma omp parallel for collapse(2)
-        for ( int h = 0; h <= heightFrame- sizeBlock; h+=sizeBlock){//dividir frame A em blocos sem superposição  
-            for ( int w = 0; w <= widthFrame- sizeBlock; w+=sizeBlock){         
-                char **block;
-                block = getblock(frameA, w, h, sizeBlock); //pega um bloco sem sobreposição em A
-                
-
-                vetor Rv = findBestBlock(block, frameR,sizeBlock,widthFrame, heightFrame); //retorna o vetor do melhor bloco no frame de referencia
-                deleteMatrix(block,sizeBlock,sizeBlock);
-                //printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
-                
-            }
-        }
+  // start MPI
+  int qtd_ranks, rank;
+  MPI_Status st;
+  MPI_Request rq;
+  char computador[MPI_MAX_PROCESSOR_NAME];
+  MPI_Init(NULL, NULL);
+  MPI_Comm_size(MPI_COMM_WORLD, &qtd_ranks);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  int nMyRank = MPI::COMM_WORLD.Get_rank();
   
-        frameR = frameA;  
-        time_t endFrame = time(NULL);
-        printf("\n\nTEMPO PROCESSANDO 1 FRAME %ld seconds\n\n", (endFrame - beginFrame));
-    }
-    free(frameR);
+  printf("Estou executando no computador %s, meu rank %d de um total de %d processos\n", computador, rank, qtd_ranks);
+  // start MPI
+
+  char *frameR, *frameA;
+  time_t begin = time(NULL);
+
+  if (rank == 0) {    
     
+    
+    video = fopen("video_converted_640x360.yuv", "rb");
+    frameR = readFrames(widthFrame, heightFrame, video);
+   
+    for (int iFrame = 0; iFrame < numeroFrames-1; iFrame +=1) {     
+      frameA = readFrames(widthFrame, heightFrame, video);
+      // MPI_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+      MPI_Send(frameR, char_por_frame, MPI_CHAR, iFrame%(qtd_ranks-1)+1, 0, MPI_COMM_WORLD);
+      printf("Enviado requisição de frameR numero%d rank %d)\n", iFrame+1,iFrame%(qtd_ranks-1)+1);
+      MPI_Send(frameA, char_por_frame, MPI_CHAR, iFrame%(qtd_ranks-1)+1, 1, MPI_COMM_WORLD);
+      printf("Enviado requisição de frameA numero %d rank %d)\n", iFrame+1,iFrame%(qtd_ranks-1)+1);
+      delete (frameR);
+      frameR = frameA;
 
-    fclose(video);
-    time_t end = time(NULL);
-    printf("The elapsed time is %ld seconds", (end - begin));
-    system("pause");
-    return 0;
+      //recebimento
+      int* vetorResultado = new int[3600*4];
+      printf("Vou receber: %d\n",iFrame%(qtd_ranks-1)+1);
+      //(void *buf, int count, MPI_Datatype datatype, int source,int tag, MPI_Comm comm, MPI_Request * request)
+      MPI_Recv(vetorResultado, 3600*4, MPI_INT, MPI_ANY_SOURCE, 100, MPI_COMM_WORLD, &st);     
+      printf("Recebido: %d\n",iFrame%(qtd_ranks-1)+1);
+      delete(vetorResultado);
 
+    }
+    delete (frameR);
+
+  }
+
+  else {
+               
+    for (int iFrame = 0; iFrame < (numeroFrames-1)/(qtd_ranks-1); ++iFrame) {
+      
+      
+      frameR = new char[char_por_frame];
+      frameA = new char[char_por_frame];
+
+      // int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
+      
+      MPI_Recv(frameR, char_por_frame, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &st);
+      printf("recebido frame R numero%d rank%d)\n",(iFrame*(qtd_ranks-1))+rank, rank);
+      
+      MPI_Recv(frameA, char_por_frame, MPI_CHAR, 0, 1, MPI_COMM_WORLD, &st);
+      printf("recebido frame A numero %d rank %d)\n",(iFrame*(qtd_ranks-1))+rank, rank);
+      
+      int count = 0;
+      int* vetorResultado = new int[3600*4];
+      #pragma omp parallel for collapse(2)
+      for (int h = 0; h <= heightFrame - sizeBlock; h += sizeBlock) { // dividir frame A em blocos sem superposição
+        for (int w = 0; w <= widthFrame - sizeBlock; w += sizeBlock) {
+          
+          char **block = getblock(frameA, w, h, sizeBlock);                                   // pega um bloco sem sobreposição em A
+          vetor Rv = findBestBlock(block, frameR, sizeBlock, widthFrame, heightFrame); // retorna o vetor do melhor bloco no frame de referencia
+          deleteMatrix(block, sizeBlock, sizeBlock);
+
+
+          vetorResultado[++count] = h;				//0 4 8     //   3600*(Frame A(h,w)   FrameR (rv.H,rv.W)  )   
+          vetorResultado[++count] = w;			//1 5 9
+          vetorResultado[++count] = Rv.H;	//2 6 10
+          vetorResultado[++count] = Rv.W;	//3 7 11 
+          //printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
+           
+        }
+      } 
+      printf("Vou enviar: %d\n",rank);
+      MPI_Send(vetorResultado, 3600*4, MPI_INT, 0, 100, MPI_COMM_WORLD);
+      printf("Enviou: %d\n",rank);
+      delete (frameR);
+      delete (frameA);
+      delete (vetorResultado);   
+    }
+    std::cout << "I node " << nMyRank << " have finish!\n";
+  }
+  
+  std::cout << "I node " << nMyRank << " am waiting for other nodes to finish...\n";
+  MPI::COMM_WORLD.Barrier();
+  if (rank == 0){ 
+      fclose(video);
+      time_t end = time(NULL);
+      printf("The elapsed time is %ld seconds\n", (end - begin)); 
+    }
+  
+  
+  MPI_Finalize();
+  return 0;
 }
 
-// g++ -fopenmp FullSearch_OPENMP.cpp -lpthread -o teste
+// mpic++ FullSearch_OPENMP+MPI.cpp -o teste
+// mpirun --host localhost:4 teste
+
+// mpic++ -fopenmp FullSearch_OPENMP+MPI.cpp -lpthread -o teste
+
+
+//https://www.cse-lab.ethz.ch/wp-content/uploads/2019/11/hpcse1-19_Lecture_09_distributed_memory_MPI_2.pdf
