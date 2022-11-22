@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
       printf("Recebido do rank: %d\n",iFrame%(qtd_ranks-1)+1);
       file<<"frame "<<iFrame+1<<'\n';
       for(vector<int>::const_iterator i = vetRecebimento.begin(); i != vetRecebimento.end(); ++i) {
-        file << *i;
+        file <<*i<<',';
       }
       file<<'\n';
 
