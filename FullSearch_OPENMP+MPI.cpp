@@ -216,7 +216,12 @@ int main(int argc, char *argv[]) {
       int count = 0;
       vector<int> vetRecebimento;
       
-      #pragma omp parallel for
+      #pragma omp parallel
+      {
+      vector<int> vec_private;
+      
+
+      #pragma omp for collapse(2)
       for (int h = 0; h <= heightFrame - sizeBlock; h += sizeBlock) { // dividir frame A em blocos sem superposição
         for (int w = 0; w <= widthFrame - sizeBlock; w += sizeBlock) {
           
@@ -225,14 +230,17 @@ int main(int argc, char *argv[]) {
           deleteMatrix(block, sizeBlock, sizeBlock);
 
 
-          vetRecebimento.push_back(h);				//0 4 8     //   3600*(Frame A(h,w)   FrameR (rv.H,rv.W)  )   
-          vetRecebimento.push_back(w);		//1 5 9
-          vetRecebimento.push_back(Rv.H);	//2 6 10
-          vetRecebimento.push_back(Rv.W);	//3 7 11 
+          vec_private.push_back(h);				//0 4 8     //   3600*(Frame A(h,w)   FrameR (rv.H,rv.W)  )   
+          vec_private.push_back(w);		//1 5 9
+          vec_private.push_back(Rv.H);	//2 6 10
+          vec_private.push_back(Rv.W);	//3 7 11 
           //printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
            
         }
       } 
+      #pragma omp critical
+      vetRecebimento.insert(vetRecebimento.end(), vec_private.begin(), vec_private.end());
+      }
       printf("Vou enviar: %d\n",rank);
       MPI_Send(vetRecebimento.data(), vetRecebimento.size(), MPI_INT, 0, 100, MPI_COMM_WORLD);
       printf("Enviou: %d\n",rank);
