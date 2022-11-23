@@ -80,7 +80,7 @@ char ** getblock(char * frame,int pixelX,int pixelY,int size){
 	
 int SAD(int sizeblock,char** block1,char **block2){
     int result = 0;
-    
+    //    #pragma omp for reduction(+:result)   não funciona, acusa result de ser privado 
     for (int h = 0; h < sizeblock; h++){
       
         for (int w = 0; w < sizeblock; w++){
@@ -101,6 +101,7 @@ vetor findBestBlock(char **blocoAtual, char *frameR,int sizeBlock, int widthFram
     int count = 0;
 
     // esses 2 FOR, adicionam no vetor blocosCandidatos, vários blocos armazenando a posição e o seu valor SAD
+    #pragma omp for collapse(2)
     for ( h = 0; h <= heightFrame- sizeBlock; h+=sizeBlock)
     {
         for ( w = 0; w <= widthFrame- sizeBlock; w+=sizeBlock)
@@ -154,7 +155,7 @@ int main(int argc, char *argv[]){
 
                 vetor Rv = findBestBlock(block, frameR,sizeBlock,widthFrame, heightFrame); //retorna o vetor do melhor bloco no frame de referencia
                 deleteMatrix(block,sizeBlock,sizeBlock);
-                printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
+                //printf("Ra(%d,%d),Rv(%d,%d)\n",h,w,Rv.H,Rv.W);
                 
             }
         }

@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
         MPI_Get_count(&st , MPI_INT , &size );
         vetRecebimento.resize(size);
         MPI_Recv(vetRecebimento.data(), vetRecebimento.size(), MPI_INT, MPI_ANY_SOURCE, 100, MPI_COMM_WORLD, &st);     
-        printf("Recebido do rank: %d\n",iFrame%(qtd_ranks-1)+1);
+        printf("Mestre recebe frame\n");
         file<<"frame "<<iFrame+1<<'\n';
         for(vector<int>::const_iterator i = vetRecebimento.begin(); i != vetRecebimento.end(); ++i) {
           file <<*i<<',';
